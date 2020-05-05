@@ -78,6 +78,7 @@ def load_data(filename):
                 spo_list = []
                 for spo in spos:
                     if spo['predicate'] in complex_relation:
+                        continue
                         #print json.dumps(spo).decode("unicode-escape")
                         #print spo
                         #print spo['object']
@@ -215,7 +216,7 @@ bert = build_transformer_model(
 output = Dense(
     units=2, activation='sigmoid', kernel_initializer=bert.initializer
 )(bert.model.output)
-subject_preds = Lambda(lambda x: x**3)(output)
+subject_preds = Lambda(lambda x: x**2)(output)
 
 subject_model = Model(bert.model.inputs, subject_preds)
 
@@ -359,7 +360,7 @@ def evaluate(data):
     """评估函数，计算f1、precision、recall
     """
     X, Y, Z = 1e-10, 1e-10, 1e-10
-    f = open('dev_pred.json', 'w', encoding='utf-8')
+    f = open('dev_pred_easy.json', 'w', encoding='utf-8')
     pbar = tqdm()
     for d in data:
         R = set([SPO(spo) for spo in extract_spoes(d['text'])])
@@ -398,7 +399,7 @@ class Evaluator(keras.callbacks.Callback):
         f1, precision, recall = evaluate(valid_data)
         if f1 >= self.best_val_f1:
             self.best_val_f1 = f1
-            train_model.save_weights('best_model.weights')
+            train_model.save_weights('best_model_easy.weights')
         optimizer.reset_old_weights()
         print(
             'f1: %.5f, precision: %.5f, recall: %.5f, best f1: %.5f\n' %
