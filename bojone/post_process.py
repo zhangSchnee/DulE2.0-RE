@@ -4,8 +4,11 @@ import json
 import os
 
 
+complex_rel =  [u"上映时间",u"饰演",u"获奖",u"配音",u"票房"]
+
 def convert(pred):
     schema = []
+    
     #读取schema信息
     with open("./data2/schema.json", encoding='utf8') as f:
         for line in f:
@@ -30,11 +33,23 @@ def convert(pred):
             else:
                 pre = p[1]
                 att = "@value"
-            key = p[0]+pre+p[2]
-            if key not in spo_dict.keys():
-                spo_dict[key] = {"o":{}, "p":pre, "s":p[0]}
+            
+            
+            if pre not in complex_rel:
+                key = p[0]+pre+p[2]
+                if key not in spo_dict.keys():
+                    spo_dict[key] = {"o":{}, "p":pre, "s":p[0]}
 
-            spo_dict[key]["o"][att] = p[2]
+                spo_dict[key]["o"][att] = p[2]
+            else:
+                #print('---')
+                key = p[0]+pre+"complex"
+                if key not in spo_dict.keys():
+                    spo_dict[key] = {"o":{}, "p":pre, "s":p[0]}
+
+                spo_dict[key]["o"][att] = p[2]                
+        
+        #print(spo_dict)
         spo_list = [SPO(spo_dict[k], pre_dict) for k in spo_dict.keys()]
         s = json.dumps({"text": text, "spo_list": spo_list}, ensure_ascii=False)
         f.write(s + "\n")
@@ -42,6 +57,8 @@ def convert(pred):
 
 
 def SPO(triple, schema):
+    #if "complex" in triple:
+    print(triple)
     s = schema[triple["p"]]
     otype = {}
     for k in triple["o"].keys():
@@ -53,5 +70,5 @@ def SPO(triple, schema):
 
 
 if __name__ == "__main__":
-    convert("./data2/dev_pred.json")
+    convert("final_predict.json")
     
