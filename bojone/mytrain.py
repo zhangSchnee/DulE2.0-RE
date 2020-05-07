@@ -369,8 +369,7 @@ def evaluate(data):
             'f1: %.5f, precision: %.5f, recall: %.5f' % (f1, precision, recall)
         )
         s = json.dumps({'text': d['text'], 'spo_list': list(T), 'spo_list_pred': list(R), 'new': list(R - T), 'lack': list(T - R),},
-                       ensure_ascii=False,
-                       indent=4)
+                       ensure_ascii=False)
         f.write(s + '\n')
     pbar.close()
     f.close()
