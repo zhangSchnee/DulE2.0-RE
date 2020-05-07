@@ -342,11 +342,7 @@ class SPO(tuple):
     使得在判断两个三元组是否等价时容错性更好。
     """
     def __init__(self, spo):
-        self.spox = (
-            tuple(tokenizer.tokenize(spo[0])),
-            spo[1],
-            tuple(tokenizer.tokenize(spo[2])),
-        )
+        self.spox = (tuple(tokenizer.tokenize(spo[0])), spo[1], tuple(tokenizer.tokenize(spo[2])),)
 
     def __hash__(self):
         return self.spox.__hash__()
@@ -372,13 +368,7 @@ def evaluate(data):
         pbar.set_description(
             'f1: %.5f, precision: %.5f, recall: %.5f' % (f1, precision, recall)
         )
-        s = json.dumps({
-            'text': d['text'],
-            'spo_list': list(T),
-            'spo_list_pred': list(R),
-            'new': list(R - T),
-            'lack': list(T - R),
-        },
+        s = json.dumps({'text': d['text'], 'spo_list': list(T), 'spo_list_pred': list(R), 'new': list(R - T), 'lack': list(T - R),},
                        ensure_ascii=False,
                        indent=4)
         f.write(s + '\n')
