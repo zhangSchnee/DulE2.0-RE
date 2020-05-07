@@ -43,7 +43,11 @@ def convert(pred):
 
 def SPO(triple, schema):
     s = schema[triple["p"]]
-    spo = {"object_type": s['object_type'], "predicate": triple["p"], "object": triple["o"], "subject_type":s["subject_type"], "subject": triple["s"]}
+    otype = {}
+    for k in triple["o"].keys():
+        otype.update({k:s['object_type'][k]})
+        
+    spo = {"object_type": otype, "predicate": triple["p"], "object": triple["o"], "subject_type":s["subject_type"], "subject": triple["s"]}
     return spo
 
 
