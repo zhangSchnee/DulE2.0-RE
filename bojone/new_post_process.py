@@ -44,7 +44,7 @@ def convert(pred):
             data.append(json.loads(line))
     
     #输出文件
-    f = open('./res_pred_threshold.json', 'w', encoding='utf8')
+    f = open('data/res_modified.json', 'w', encoding='utf8')
     for ins in data:
         complex_flag = 0
         text = ins["text"]
@@ -131,10 +131,118 @@ def SPO(triple, schema):
     return spo
 
 
+def addrule1(input_file):
+    data = []
+    with open(input_file, encoding='utf8') as f:
+        for line in f:
+            data.append(json.loads(line))  
+    f = open('data/modified.json', 'w', encoding='utf8')
+    add_zhuanji = 0
+    add_zuozhe = 0
+    remove_toolong  =0
+    remove_he = 0
+    add_inwork = 0
+    add_qinshu = 0
+    for ins in data:  
+        text = ins["text"]
+        spo_list_pred = ins["spo_list_pred"]
+
+        for p in spo_list_pred:
+            if len(p[0])>15 and ("《"+p[0]+"》") not in text:
+                if "，" in p[0] or "《" in p[0] or "》" in p[0]:
+                    remove_toolong+=1
+                    spo_list_pred.remove(p)
+                    print("remove relation:too long {0}".format(p))
+                    continue
+            if len(p[1])>15 and ("《"+p[1]+"》") not in text:
+                    remove_toolong+=1
+                    spo_list_pred.remove(p)
+                    print("remove relation:too long {0}".format(p))
+                    continue
+            # if "和" in p[0] and ("《"+p[0]+"》") not in text:
+            #     sen = p[0].split('和')
+            #     for p2 in spo_list_pred:
+            #         if p2!=p and p[1] == p2[1]:
+            #             if p2[2] in sen:
+            #                 spo_list_pred.remove(p)
+            #                 remove_he+=1
+            #                 print("remove relation:he {0}".format(p))
+            #                 continue
+            #     print("split relation: {0}".format(p))
+            # if "和" in p[2] and ("《"+p[2]+"》") not in text:
+            #     sen = p[2].split('和')
+            #     for p2 in spo_list_pred:
+            #         if p2!=p and p[1] == p2[1]:
+            #             if p2[0] in sen:
+            #                 spo_list_pred.remove(p)
+            #                 remove_he+=1
+            #                 print("remove relation:he {0}".format(p))
+            #                 continue
+            #     print("split relation: {0}".format(p))
+            if "丈夫" in p[1]:
+                new_spo = [p[2],"妻子",p[0]]
+                if new_spo not in spo_list_pred:
+                    spo_list_pred.append(new_spo) 
+                    add_qinshu+=1
+                    print("add relation:妻子 {0}".format(new_spo))
+            if "妻子" in p[1]:
+                new_spo = [p[2],"丈夫",p[0]]
+                if new_spo not in spo_list_pred:
+                    spo_list_pred.append(new_spo) 
+                    add_qinshu+=1
+                    print("add relation:丈夫 {0}".format(new_spo)) 
+            # if "所属专辑" in p[1]:
+            #     gequ = p[0]
+            #     zhuanji = p[2]
+            #     for p2 in spo_list_pred:
+            #         if p!=p2 and "歌手" in p2[1] and gequ == p2[0]:
+            #             new_spo = [zhuanji,"歌手",p2[2]]
+            #             if new_spo not in spo_list_pred:
+            #                 spo_list_pred.append(new_spo) 
+            #                 add_zhuanji +=1
+            #                 print("add relation:歌手 {0}".format(new_spo))  
+            if "主演" in p[1]:
+                new_spo = [p[2],"饰演_inWork",p[0]]
+                is_new =0 
+                for p2 in spo_list_pred:
+                    if "饰演" in p2[1] and p2[0] ==p[2]:
+                        is_new = 1
+                if new_spo not in spo_list_pred and is_new:
+                    spo_list_pred.append(new_spo)
+                    add_inwork+=1
+                    print("add relation:inWork {0}".format(new_spo))  
+
+            # if "编剧" in p[1]:
+            #     if "《" +p[0] +"》" in text:
+            #         new_spo = [p[0],"作者",p[2]]
+            #         is_new = 1
+            #         for p2 in spo_list_pred:
+            #             if p!=p2 and "作者" in p2[1] and p[0] in p2:
+            #                 is_new = 0
+            #         if is_new:
+            #             spo_list_pred.append(new_spo)
+            #             add_zuozhe+=1
+            #             print("add relation:作者 {0}".format(new_spo)) 
+            
+
+                                        
+        ins["spo_list_pred"] = spo_list_pred
+        s=json.dumps(ins,ensure_ascii=False)
+        f.write(s + "\n")
+    f.close()
+    print("添加了{0}条亲属".format(add_qinshu))
+    print("添加了{0}条专辑->歌手".format(add_zhuanji))
+    print("添加了{0}条编剧->作者".format(add_zuozhe))
+    print("添加了{0}条主演->饰演_inWork".format(add_inwork))
+    print("去除了过长的{0}条关系".format(remove_toolong))
+    print("去除了有和的{0}条关系".format(remove_he))
+               
+            
 
 if __name__ == "__main__":
     
-    convert("pred_threshold.json")
+    addrule1('pred_threshold_att.json')
+    convert("./data/modified.json")
     print('conflict number:')
     print(number)
     print(complex_number)
